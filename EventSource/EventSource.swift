@@ -171,13 +171,16 @@ open class EventSource: NSObject, EventSourceProtocol, URLSessionDataDelegate {
                          task: URLSessionTask,
                          didCompleteWithError error: Error?) {
 
-        guard let responseStatusCode = (task.response as? HTTPURLResponse)?.statusCode else {
-            mainQueue.async { [weak self] in self?.onComplete?(nil, nil, error as NSError?) }
-            return
+        guard let httpResponse = task.response as? HTTPURLResponse else {
+           mainQueue.async { [weak self] in self?.onComplete?(nil, nil, error as NSError?) }
+           return
         }
+               
+        let responseStatusCode = httpResponse.statusCode
+
 
         let reconnect = shouldReconnect(statusCode: responseStatusCode)
-        mainQueue.async { [weak self] in self?.onComplete?(responseStatusCode, reconnect, nil) }
+        mainQueue.async { [weak self] in self?.onComplete?(responseStatusCode, reconnect, error as NSError?) }
     }
 
     open func urlSession(_ session: URLSession,
